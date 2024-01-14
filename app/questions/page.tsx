@@ -1,7 +1,7 @@
 "use client"
-import { useContext, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { GlobalStateContext } from "../GlobalStateProvider"
+import useUserStore from "../stores/useUserStore"
 
 interface questionBank {}
 
@@ -26,7 +26,7 @@ export default function Questions() {
   const [selectedAnswers, setSelectedAnswers] = useState(new Set<string>())
   const [openAnswers, setOpenAnswers] = useState<Map<number, string>>(new Map())
   const router = useRouter()
-  const globalState = useContext(GlobalStateContext)
+  const userStore = useUserStore()
 
   // Adds answer to set if it's present, removes answer if it's already in set
   const updateselectedAnswers = (answer: string) => {
@@ -48,9 +48,6 @@ export default function Questions() {
     openAnswers.forEach((answer) => {
       prompt = prompt.concat(answer + ", ")
     })
-    // await fetch("/api/recommendations/659dcdf9a1fd5d245eace1a9", {
-    //   method: "GET",
-    // })
     const res = await fetch("/api/openAI", {
       method: "POST",
       body: JSON.stringify({
@@ -58,12 +55,7 @@ export default function Questions() {
       }),
     })
     const user = await res.json()
-    // const mockRecommendations = {
-    //   "Aruba, Mexico": "Description about Aruba, Mexico",
-    //   "Hawaii, USA": "Description about Hawaii, USA",
-    //   "Hanoi, Vietnam": "Description about Hanoi, Vietnam",
-    //   "Wayne, Thailand": "Description about Wayne, Thailand",
-    // }
+    userStore.setUserState({ userId: user.id })
     router.push(`/results?id=${user.userId}`)
   }
 

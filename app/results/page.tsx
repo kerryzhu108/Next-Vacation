@@ -1,7 +1,15 @@
 import prisma from "@/prisma/PrismaClient"
-import { faSearch, faCircleUser, faStar } from "@fortawesome/free-solid-svg-icons"
+import { faSearch, faCircleUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import Image from "next/image"
+import Result from "../components/Recommendation"
+import { Recommendation } from "@prisma/client"
+import AdviceLimit from "../components/AdviceLimit"
+import Link from "next/link"
+import Navbar from "../components/Navbar"
+import { MenuOptions } from "../constants"
+import { useState } from "react"
+import { getServerSession } from "next-auth"
+import { authOptions } from "../api/auth/[...nextauth]/route"
 
 const getRecommendations = async (userId: string) => {
   return await prisma.recommendation.findMany({
@@ -9,53 +17,39 @@ const getRecommendations = async (userId: string) => {
   })
 }
 
-export default async function Results({ params, searchParams }: { params: any; searchParams: { id: string } }) {
-  const recommendations = await getRecommendations(searchParams.id)
+const getUserInfo = async (userId?: string) => {
+  if (!userId) return null
+
+  const res = await prisma.user.findFirst({
+    where: { id: userId },
+  })
+  console.log(userId)
+  return res
+}
+
+export default async function Results({ params, searchParams }: { params: {}; searchParams: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  const user = await getUserInfo(session?.user.id ?? searchParams.id)
+  const recommendations = await getRecommendations(session?.user.id ?? searchParams.id)
+
+  if (!user) {
+    return (
+      <>
+        <Navbar selected={MenuOptions.HOME} />
+        <Link href="/questions" className="h-full flex items-center justify-center -mt-10 underline">
+          Error loading page, please click this link to take the survey again.
+        </Link>
+      </>
+    )
+  }
   return (
     <div className="ml-3">
-      <div className="flex flex-row mt-2 text-sm font-semibold px-3 flex-wrap">
-        <div>
-          <h1>Free Genereations</h1>
-        </div>
-        <div className="flex flex-row flex-grow justify-center">
-          <h1 className="mx-3">Your Picks</h1>
-          <h1 className="mx-3">Modify Preferences</h1>
-          <div className="mx-3 border-2 pl-3">
-            <input placeholder="Look Up" size={10} />
-            <FontAwesomeIcon icon={faSearch} size="xs" />
-          </div>
-        </div>
-        <div className="mr-2">Account</div>
-        <FontAwesomeIcon icon={faCircleUser} size="xl" />
-      </div>
-
-      <div className="mt-10 flex flex-row">
-        {recommendations.map((rec) => {
-          return (
-            <div key={rec.id} className="mt-5 mx-3 relative">
-              <FontAwesomeIcon
-                icon={faStar}
-                size="sm"
-                className="absolute right-1 top-1 fa-stars"
-                color="yellow"
-                style={{
-                  stroke: "black",
-                  strokeWidth: 30,
-                }}
-              />
-              <Image
-                src={rec.imageUrl}
-                alt={rec.location}
-                width={0}
-                height={0}
-                layout="responsive"
-                className="max-w-60 rounded-lg"
-              />
-              <h2 className="font-semibold">{rec.location}</h2>
-              <h3 className="text-xs">Learn More</h3>
-            </div>
-          )
+      <Navbar selected={MenuOptions.HOME} />
+      <div className="mt-10 flex flex-row flex-wrap justify-center pb-60">
+        {recommendations.map((rec: Recommendation) => {
+          return <Result rec={rec} key={rec.id} />
         })}
+        <AdviceLimit style="invisible sm:visible" adviceUsed={user.trials} freeAdvice={user.limit} />
       </div>
     </div>
   )

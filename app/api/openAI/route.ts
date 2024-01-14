@@ -38,7 +38,7 @@ export const POST = async (request: Request) => {
     )
   }
   console.log(response)
-  const user = await prisma.user.create({ data: {} })
+  const user = await prisma.user.create({ data: { trials: 1 } })
   Object.keys(response).map(async (location) => {
     const imageSearch = await fetch(
       "https://www.googleapis.com/customsearch/v1?" +

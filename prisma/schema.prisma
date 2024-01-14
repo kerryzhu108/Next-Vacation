@@ -7,10 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  PAID
+  UNPAID
+}
+
 model User{
   id String @id @default(auto()) @map("_id") @db.ObjectId
+  username String? @unique
+  hashedPassword String?
+  trials Int @default(0)
+  limit Int @default(2)
+  status Status @default(UNPAID)
+
   recommendations Recommendation[]
   preferences Preferences[]
+  account Account[] // Multiple accounts can view a single user's preferences
+}
+
+model Account{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  username String @unique
+  hashedPassword String
+
+  userId String @db.ObjectId
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
 
 model Recommendation{
@@ -18,6 +40,7 @@ model Recommendation{
   location String
   description String
   imageUrl String
+  favorite Boolean @default(false)
 
   userId String @db.ObjectId
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
