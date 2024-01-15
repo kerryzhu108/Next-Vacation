@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { openai } from "./config"
 import prisma from "@/prisma/PrismaClient"
+import { randomUUID } from "crypto"
 
 interface Recommendations {
   [location: string]: string
@@ -8,7 +9,7 @@ interface Recommendations {
 
 export const POST = async (request: Request) => {
   const body = await request.json()
-  const { message } = body
+  const { message, userId } = body
   if (!message || typeof message !== "string") {
     return NextResponse.json({ error: "Missing or invalid message" }, { status: 400 })
   }
@@ -37,8 +38,17 @@ export const POST = async (request: Request) => {
       { status: 500 }
     )
   }
-  console.log(response)
-  const user = await prisma.user.create({ data: { trials: 1 } })
+  let targetUserId = userId
+  if (!targetUserId) {
+    const newUser = await prisma.user.create({
+      data: {
+        email: Date.now().toString(),
+      },
+    })
+    targetUserId = newUser.id
+  }
+
+  const groupId = randomUUID()
   Object.keys(response).map(async (location) => {
     const imageSearch = await fetch(
       "https://www.googleapis.com/customsearch/v1?" +
@@ -57,10 +67,10 @@ export const POST = async (request: Request) => {
       }
       return squareness == 0
     })
-    const rec = await prisma.recommendation.create({
-      data: { userId: user.id, location, description: response[location], imageUrl: link },
+    await prisma.recommendation.create({
+      data: { userId: targetUserId, groupId, location, description: response[location], imageUrl: link },
     })
-    console.log(rec)
   })
-  return NextResponse.json({ userId: user.id })
+  console.log(targetUserId, "openai1")
+  return NextResponse.json({ userId: targetUserId })
 }

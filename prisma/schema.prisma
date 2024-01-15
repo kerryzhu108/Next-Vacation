@@ -14,29 +14,43 @@ enum Status {
 
 model User{
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  username String? @unique
+  intentId String? @db.ObjectId
+  name String?
+  email String @unique // acts as username, named "email" for OAuth adaptor
+  emailVerified DateTime?
+  image String?
   hashedPassword String?
-  trials Int @default(0)
+  trials Int @default(1)
   limit Int @default(2)
   status Status @default(UNPAID)
 
+  account Account[]
   recommendations Recommendation[]
   preferences Preferences[]
-  account Account[] // Multiple accounts can view a single user's preferences
 }
 
 model Account{
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  username String @unique
-  hashedPassword String
-
   userId String @db.ObjectId
+  type String
+  provider String
+  providerAccountId String
+  refresh_token String?  @db.String
+  access_token String?  @db.String
+  expires_at Int?
+  token_type String?
+  scope String?
+  id_token String?  @db.String
+  session_state String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([provider, providerAccountId])
 }
 
 model Recommendation{
   id String @id @default(auto()) @map("_id") @db.ObjectId
+  groupId  String
   location String
   description String
   imageUrl String

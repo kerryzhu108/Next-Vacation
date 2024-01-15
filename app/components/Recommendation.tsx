@@ -4,11 +4,22 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Recommendation } from "@prisma/client"
 import Image from "next/image"
 import { useState } from "react"
+import useRecommendationStore from "../stores/useRecommendationStore"
 
-export default function Result({ rec }: { rec: Recommendation }) {
+export default function Result({
+  rec,
+  showDesc = true,
+  className,
+}: {
+  rec: Recommendation
+  showDesc?: boolean
+  className?: string
+}) {
   const [isFavorite, setFavorite] = useState(rec.favorite)
+  const recommendationStore = useRecommendationStore()
+
   return (
-    <div className={`mt-6 mx-4 relative inline-block text-wrap w-60`}>
+    <div className={`mt-6 mx-4 relative inline-block text-wrap w-60 ${className}`}>
       <FontAwesomeIcon
         icon={faHeart}
         className="absolute right-1 top-0 p-3 pb-6 pl-6"
@@ -31,9 +42,20 @@ export default function Result({ rec }: { rec: Recommendation }) {
         width={200}
         height={200}
         className={`rounded-xl select-none object-cover w-60 h-60 mb-2`}
+        onClick={() => {
+          recommendationStore.setRecommendationState({
+            isVisible: true,
+            targetRecommendation: rec,
+          })
+        }}
       />
-      <h2 className="font-semibold">{rec.location}</h2>
-      <h3 className="text-sm text-gray-500">Learn More</h3>
+      {showDesc && (
+        <>
+          {" "}
+          <h2 className="font-semibold">{rec.location}</h2>
+          <h3 className="text-sm text-gray-500">Learn More</h3>
+        </>
+      )}
     </div>
   )
 }

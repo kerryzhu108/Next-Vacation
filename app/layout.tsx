@@ -5,8 +5,8 @@ import { AuthProvider } from "./providers/AuthProvider"
 import "@fortawesome/fontawesome-svg-core/styles.css"
 import { config } from "@fortawesome/fontawesome-svg-core"
 import { LoginModal } from "./modals/LoginModal"
-import { authOptions } from "./api/auth/[...nextauth]/route"
-import { GlobalStateProvider } from "./providers/GlobalStateProvider"
+import { DetailsModal } from "./modals/DetailsModal"
+import Navbar from "./components/Navbar"
 config.autoAddCss = false
 
 const inter = Open_Sans({ subsets: ["latin"] })
@@ -21,8 +21,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
+          <Navbar />
           <LoginModal />
-          <GlobalStateProvider>{children}</GlobalStateProvider>
+          <DetailsModal />
+          {children}
         </AuthProvider>
       </body>
     </html>

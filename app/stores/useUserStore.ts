@@ -1,16 +1,17 @@
 import { create } from "zustand"
+import { MenuOptions } from "../constants"
 
 interface UserState {
-  userId: string
-  setUserState: (newState: Partial<UserState>) => void
+  location: MenuOptions
+  setLocation: (location: MenuOptions) => void
 }
 
 const useUserStore = create<UserState>((set) => ({
-  userId: "",
-  setUserState: (newState) =>
+  location: MenuOptions.HOME,
+  setLocation: (location: MenuOptions) =>
     set((state) => ({
       ...state,
-      ...newState,
+      location,
     })),
 }))
 

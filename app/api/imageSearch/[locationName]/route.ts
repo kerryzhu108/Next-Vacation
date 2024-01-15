@@ -18,5 +18,4 @@ export const GET = async (request: Request, { params }: { params: IParams }) => 
     &cx=${process.env.SEARCH_ENGINE_ID}
     &searchType=image&q=${locationName}`
   )
-  console.log(response)
 }

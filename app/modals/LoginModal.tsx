@@ -2,9 +2,10 @@
 
 import { Dispatch, SetStateAction, useState } from "react"
 import useLoginStore from "../stores/useLoginStore"
-import { signIn, useSession } from "next-auth/react"
-import useUserStore from "../stores/useUserStore"
-import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
+import { useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
+import Cookie from "js-cookie"
 
 export function LoginModal() {
   const loginStore = useLoginStore()
@@ -12,8 +13,8 @@ export function LoginModal() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState("")
-  const userStore = useUserStore()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const input = (label: string, updater: Dispatch<SetStateAction<string>>) => {
     return (
@@ -31,8 +32,8 @@ export function LoginModal() {
     fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
-        userId: userStore.userId,
-        username,
+        userId: searchParams.get("id"),
+        email: username,
         password,
       }),
     }).then(async (res) => {
@@ -43,46 +44,49 @@ export function LoginModal() {
       if (!response?.userId) {
         return setErrors("An unexpected error occurred")
       }
-      userStore.setUserState({ userId: response.userId })
+      signIn("credentials", {
+        email: username,
+        password,
+      })
+      router.refresh()
       loginStore.toggleVisible()
     })
   }
 
   const handleLogin = async () => {
     const res = await signIn("credentials", {
-      username,
+      email: username,
       password,
       redirect: false,
     })
     if (res?.error) {
-      setErrors(res.error)
+      return setErrors(res.error)
     }
+    router.refresh()
     loginStore.toggleVisible()
-    router.push("/results")
   }
 
   return (
     <div
-      className={`fixed flex justify-center items-center w-full h-full top-0 z-50 ${
+      className={`fixed flex justify-center items-center w-full h-full top-0 z-50 ml-0 ${
         loginStore.isVisible ? "" : "hidden"
       }`}
       style={{ backgroundColor: `rgba(70, 80, 100, 0.9)` }}
       onClick={(e) => {
         if (e.currentTarget == e.target) {
-          loginStore.toggleVisible() // close if background is clicked
+          loginStore.toggleVisible()
         }
       }}
     >
-      //
-      <div className="bg-white inline-block pb-10 rounded-t-xl rounded-b-md opacity-100 w-full max-w-lg mx-5">
+      <div className="bg-white inline-block pb-10 rounded-t-xl rounded-b-md opacity-100 w-full max-w-lg mx-2">
         <div className="flex justify-around text-center">
           <div
             onClick={() => {
               setIsLogin(false)
               setErrors("")
             }}
-            className={`w-full p-2 py-3 rounded-sm border-gray-200 ${
-              !isLogin ? "bg-white rounded-tl-2xl" : "bg-gray-300 rounded-tl-xl opacity-40"
+            className={`w-full p-2 py-3 rounded-t-sm border-gray-200 ${
+              !isLogin ? "bg-white rounded-tl-2xl" : "bg-gray-300 rounded-tr-none"
             }`}
           >
             Sign Up
@@ -92,15 +96,15 @@ export function LoginModal() {
               setIsLogin(true)
               setErrors("")
             }}
-            className={`w-full p-2 py-3 rounded-sm border-gray-200 ${
-              isLogin ? "bg-white rounded-tr-2xl" : "bg-gray-300 rounded-tr-xl opacity-40"
+            className={`w-full p-2 py-3 rounded-t-sm border-gray-200 ${
+              isLogin ? "bg-white rounded-tr-2xl" : "bg-gray-300 rounded-tl-none"
             }`}
           >
             Login
           </div>
         </div>
         <div className="flex flex-col items-center w-full">
-          <div className="text-sm text-gray-400 text-left mt-2 w-2/3">
+          <div className="text-sm text-gray-400 text-left mt-3 w-2/3">
             Create an account to save your recommendations and upgrade plans.
           </div>
           <div className="flex flex-col items-center w-2/3">
@@ -118,7 +122,21 @@ export function LoginModal() {
             {isLogin ? "LOGIN" : "SIGN UP"}
           </button>
           <div className="w-2/3 h-0.5 mt-5 bg-gray-100" />
-          <div className="text-xs text-gray-400 mt-5">Alternatively {isLogin ? "log in" : "sign up"} with Google</div>
+          <button
+            className="flex items-center text-xs text-gray-400 mt-5"
+            onClick={async () => {
+              Cookie.set(
+                "additionalAuthParams",
+                JSON.stringify({
+                  userId: searchParams.get("id"),
+                })
+              )
+              await signIn("google")
+            }}
+          >
+            <Image src={"/google.svg"} alt={"Google"} width={30} height={30} />
+            &nbsp; Alternatively, {isLogin ? "log in" : "sign up"} with Google
+          </button>
         </div>
       </div>
     </div>
