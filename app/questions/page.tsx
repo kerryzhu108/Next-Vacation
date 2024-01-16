@@ -74,7 +74,6 @@ export default function Questions() {
   }
 
   // Limit user if a cookie has been set or an unpaid account has reached their account limit
-
   if (!allowProceed) {
     return (
       <div className="flex flex-col h-full px-5 justify-center items-center ">
@@ -89,7 +88,7 @@ export default function Questions() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full justify-center items-center">
+      <div className="flex flex-col h-full justify-center items-center -mt-14">
         <div className={styles.spinner} /> Finding Recommendations
       </div>
     )

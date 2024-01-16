@@ -12,7 +12,7 @@ config.autoAddCss = false
 const inter = Open_Sans({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Travel Where",
+  title: "Next Vacation",
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
