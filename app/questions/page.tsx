@@ -17,6 +17,7 @@ export default function Questions() {
   const [cookieUserId, setCookieUserId] = useState("")
   const [index, setIndex] = useState(0)
   const [indexHistory, setIndexHistory] = useState([0])
+  const [initialProgress, setInitialProgress] = useState(0)
   const router = useRouter()
   const session = useSession()
   const user = session.data?.user
@@ -27,6 +28,10 @@ export default function Questions() {
     // allow if (first time user) or not (an unpaid user gone over free limit)
     setAllowProceed((!user && !Cookie.get("userId")) || !(user?.status == Status.UNPAID && user.trials >= user.limit))
     setCookieUserId(Cookie.get("userId") ?? "")
+    // load progress bar
+    setTimeout(() => {
+      setInitialProgress(1)
+    }, 100)
   }, [user])
 
   // bc some questions can be skipped, use index history to support backwards navigation
@@ -92,7 +97,7 @@ export default function Questions() {
 
   return (
     <div className="h-4/5 flex justify-center items-center p-10">
-      <ProgressBar percentage={((index + 1) / (questionBank.length + 1)) * 100} />
+      <ProgressBar percentage={((index + initialProgress) / (questionBank.length + 1)) * 100} />
       <div>
         <div className="text-xl mb-3">{questionBank[index].question}</div>
         {questionBank[index].options.map((option: string) => {
