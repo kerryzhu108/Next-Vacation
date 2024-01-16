@@ -1,14 +1,10 @@
 import prisma from "@/prisma/PrismaClient"
-import { faSearch, faCircleUser } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Result from "../components/Recommendation"
 import { Recommendation } from "@prisma/client"
 import AdviceLimit from "../components/AdviceLimit"
 import Link from "next/link"
-import { MenuOptions } from "../constants"
-import { useState } from "react"
 import { getServerSession } from "next-auth"
-import { nextAuthOptions } from "../api/auth/[...nextauth]/route"
+import { nextAuthOptions } from "../constants/authOptions"
 import { cookies } from "next/headers"
 
 const getRecommendations = async (userId?: string) => {
@@ -19,7 +15,7 @@ const getRecommendations = async (userId?: string) => {
 }
 
 export default async function Results() {
-  const session = await getServerSession(nextAuthOptions())
+  const session = await getServerSession(nextAuthOptions)
   const userIdCookie = cookies().get("userId")?.value
   const recommendations = await getRecommendations(session?.user.id ?? userIdCookie)
 

@@ -17,7 +17,7 @@ export default function Favorites() {
     fetch(`/api/recommendations/fav?id=${userId}`).then(async (res) => {
       setFavorites(await res.json())
     })
-  }, [session, Cookie.get("userId")])
+  }, [session])
 
   if (!favorites || !favorites.length) {
     return (

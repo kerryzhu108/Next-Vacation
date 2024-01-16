@@ -1,16 +1,15 @@
-import { NextApiRequest, NextApiResponse } from "next"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { nextAuthOptions } from "../auth/[...nextauth]/route"
 import prisma from "@/prisma/PrismaClient"
 import { Status } from "@prisma/client"
+import { nextAuthOptions } from "@/app/constants/authOptions"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const host = process.env.NEXT_PUBLIC_HOST
 
 export const POST = async () => {
-  const userSession = await getServerSession(nextAuthOptions())
+  const userSession = await getServerSession(nextAuthOptions)
   if (!userSession?.user.id) {
     return NextResponse.json({ error: "Missing session user id" })
   }
@@ -41,7 +40,7 @@ export const POST = async () => {
 }
 
 export const DELETE = async () => {
-  const userSession = await getServerSession(nextAuthOptions())
+  const userSession = await getServerSession(nextAuthOptions)
   if (!userSession?.user.id) {
     return NextResponse.json({ error: "Missing session user id" })
   }
