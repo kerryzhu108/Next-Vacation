@@ -6,7 +6,6 @@ import UpgradeButton from "./UpgradeButton"
 export default function AdviceLimit({ classname }: { classname?: string }) {
   const session = useSession()
   const user = session.data?.user
-  console.log(user)
   if (!user || user.status == Status.PAID) {
     return null
   }
