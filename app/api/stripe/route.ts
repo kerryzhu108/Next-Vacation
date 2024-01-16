@@ -35,7 +35,7 @@ export const POST = async () => {
     ],
     mode: "payment",
     cancel_url: `${host}/results`,
-    success_url: `${host}/results?payment="pending"`,
+    success_url: `${host}/results"`,
   })
   return NextResponse.json({ sessionId: session.id })
 }
