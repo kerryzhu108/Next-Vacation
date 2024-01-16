@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { openai } from "./config"
 import prisma from "@/prisma/PrismaClient"
 import { randomUUID } from "crypto"
+import { cookies } from "next/headers"
 
 interface Recommendations {
   [location: string]: string
@@ -22,7 +23,7 @@ export const POST = async (request: Request) => {
       {
         role: "system",
         content:
-          "You are a travel advisor that outputs JSON. Each key is a location name and each value is a description.",
+          "You are a travel advisor that outputs JSON. Each key is a 'city, region' while each value is a description.",
       },
       { role: "user", content: message },
     ],
@@ -46,10 +47,18 @@ export const POST = async (request: Request) => {
       },
     })
     targetUserId = newUser.id
+  } else {
+    // remove old recommendations
+    prisma.recommendation.deleteMany({
+      where: {
+        userId: targetUserId,
+        favorite: false,
+      },
+    })
   }
 
   const groupId = randomUUID()
-  Object.keys(response).map(async (location) => {
+  const recommendations = Object.keys(response).map(async (location) => {
     const imageSearch = await fetch(
       "https://www.googleapis.com/customsearch/v1?" +
         `key=${process.env.SEARCH_ENGINE_KEY}` +
@@ -71,6 +80,7 @@ export const POST = async (request: Request) => {
       data: { userId: targetUserId, groupId, location, description: response[location], imageUrl: link },
     })
   })
-  console.log(targetUserId, "openai1")
+  cookies().set("userId", targetUserId)
+  await Promise.all(recommendations)
   return NextResponse.json({ userId: targetUserId })
 }

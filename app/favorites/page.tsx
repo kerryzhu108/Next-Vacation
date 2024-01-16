@@ -1,28 +1,28 @@
 "use client"
-import { faArrowLeft, faMagnifyingGlass, faSearch } from "@fortawesome/free-solid-svg-icons"
+import { faSearch } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Recommendation } from "@prisma/client"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import Result from "../components/Recommendation"
 import { useSession } from "next-auth/react"
+import Cookie from "js-cookie"
 
-export default function Favorites({ params, searchParams }: { params: {}; searchParams: { id: string } }) {
+export default function Favorites() {
   const [favorites, setFavorites] = useState([] as Recommendation[])
   const [filter, setFiler] = useState("")
   const session = useSession()
   useEffect(() => {
-    console.log(session.data?.user.id)
-    if (!session.data?.user.id) return
-    fetch(`/api/recommendations/fav?id=${session.data?.user.id}`).then(async (res) => {
+    const userId = session.data?.user.id ?? Cookie.get("userId")
+    if (!userId) return
+    fetch(`/api/recommendations/fav?id=${userId}`).then(async (res) => {
       setFavorites(await res.json())
     })
-  }, [session])
+  }, [session, Cookie.get("userId")])
 
   if (!favorites || !favorites.length) {
     return (
       <div className="h-full flex justify-center items-center mx-3 text-gray-600">
-        You currently have no favorites, press the star on the top right of an image to add it here.
+        You currently have no favorites, press the heart icon on an image to add it here.
       </div>
     )
   }

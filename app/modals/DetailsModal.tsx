@@ -2,16 +2,12 @@
 import Image from "next/image"
 import useRecommendationStore from "../stores/useRecommendationStore"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faArrowLeft, faBackward, faHeart } from "@fortawesome/free-solid-svg-icons"
-import { useState } from "react"
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"
 import Result from "../components/Recommendation"
-import { useRouter } from "next/navigation"
 
 export function DetailsModal() {
   const recommendationStore = useRecommendationStore()
   const rec = recommendationStore.targetRecommendation
-  const router = useRouter()
-
   if (!rec) return
   return (
     <div
@@ -33,8 +29,7 @@ export function DetailsModal() {
           icon={faArrowLeft}
           className="absolute left-0 p-3 sm:invisible"
           onClick={() => {
-            recommendationStore.setRecommendationState({ isVisible: false })
-            router.refresh()
+            recommendationStore.toggleVisible()
           }}
         />
         <div className="mt-10 text-lg">{rec.location}</div>

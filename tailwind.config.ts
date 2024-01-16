@@ -18,6 +18,16 @@ const config: Config = {
       borderWidth: {
         "1.5": "1.5px",
       },
+      animation: {
+        fadeIn: "in 2s forwards",
+        goUp: "up 2s forwards",
+      },
+      keyframes: {
+        in: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1", translate: "0px -10px" },
+        },
+      },
     },
   },
   plugins: [],

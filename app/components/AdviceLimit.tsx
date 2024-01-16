@@ -1,7 +1,4 @@
 "use client"
-import { faUnlock } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { loadStripe } from "@stripe/stripe-js"
 import { useSession } from "next-auth/react"
 import { Status } from "@prisma/client"
 import UpgradeButton from "./UpgradeButton"
@@ -9,7 +6,7 @@ import UpgradeButton from "./UpgradeButton"
 export default function AdviceLimit({ classname }: { classname?: string }) {
   const session = useSession()
   const user = session.data?.user
-  if (!user) {
+  if (!user || user.status == Status.PAID) {
     return null
   }
   return (

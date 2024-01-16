@@ -3,111 +3,154 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import UpgradeButton from "../components/UpgradeButton"
-
-interface questionBank {}
-
-interface Question {
-  type: string
-  question: string
-  answers: string[]
-}
-
-// prettier-ignore
-const questionBank: Question[] = [
-  { type: 'single', question: "What type of climate do you prefer?", answers: ["Tropical and warm", "Mild and temperate", "Cold and snowy"] },
-  { type: 'mc', question: "What environment are you looking for?", answers: ["Bustling urban cities", "Coastal beaches", "Historical architecture", "Scenic nature"] },
-  { type: 'single', question: "What is your budget range?", answers: ["Budget-friendly", "Moderate spending", "Luxury experience", "No preference"] },
-  { type: 'single', question: "How far are you looking to travel?", answers: ["Driving distance from my city", "Within my country", "Anywhere around the world"] },
-  { type: 'open', question: "Do you have any dietary or accessiblity restrictions?", answers: [""] },
-];
+import ProgressBar from "../components/ProgressBar"
+import styles from "../styles/animations.module.css"
+import { QuestionTypes, questionSet } from "../constants"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons"
+import Cookie from "js-cookie"
+import { Status } from "@prisma/client"
 
 export default function Questions() {
+  const [allowProceed, setAllowProceed] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [cookieUserId, setCookieUserId] = useState("")
   const [index, setIndex] = useState(0)
-  const [selectedAnswers, setSelectedAnswers] = useState(new Set<string>())
-  const [openAnswers, setOpenAnswers] = useState<Map<number, string>>(new Map())
+  const [indexHistory, setIndexHistory] = useState([0])
   const router = useRouter()
   const session = useSession()
   const user = session.data?.user
+  const [questionBank, setQuestionBank] = useState(questionSet)
+  const [inputValue, setInputValue] = useState("")
 
   useEffect(() => {
-    console.log("in")
-  }, [])
+    // allow if (first time user) or not (an unpaid user gone over free limit)
+    setAllowProceed((!user && !Cookie.get("userId")) || !(user?.status == Status.UNPAID && user.trials >= user.limit))
+    setCookieUserId(Cookie.get("userId") ?? "")
+  }, [user])
 
-  // Adds answer to set if it's present, removes answer if it's already in set
-  const updateselectedAnswers = (answer: string) => {
-    const copySet = new Set(selectedAnswers)
-    copySet.delete(answer) ? setSelectedAnswers(copySet) : setSelectedAnswers(copySet.add(answer))
+  // bc some questions can be skipped, use index history to support backwards navigation
+  const goBack = () => {
+    if (indexHistory.length <= 1) return 0
+    const newIndex = indexHistory[indexHistory[indexHistory.length - 2]]
+    setIndex(newIndex)
+    setIndexHistory(indexHistory.splice(0, indexHistory.length - 1))
+    setInputValue(questionBank[newIndex].answer)
   }
-  // Updates open answers
-  const updatedOpenAnswer = (answer: string) => {
-    const copyMap = new Map(openAnswers)
-    copyMap.set(index, answer)
-    setOpenAnswers(copyMap)
+
+  const goForward = (targetIndex?: number) => {
+    const newIndex = targetIndex ?? index + 1
+    setIndexHistory(indexHistory.concat([newIndex]))
+    setIndex(newIndex)
+    setInputValue(questionBank[newIndex].answer)
   }
+
+  const updateAnswer = (answer: string) => {
+    questionBank[index].answer = answer
+    setQuestionBank(questionBank)
+  }
+
   // Formats data into prompt for AI
   const handleSubmit = async () => {
-    let prompt = "Can you recommend a few travel destinations based on these preferences: "
-    Array.from(selectedAnswers).map((answer) => {
-      prompt = prompt.concat(answer + ", ")
+    let prompt = "Recommend 6 travel destinations and make references to these preferences. "
+    questionBank.map((item) => {
+      prompt = prompt.concat(item.promptQuestion + item.answer + ". ")
     })
-    openAnswers.forEach((answer) => {
-      prompt = prompt.concat(answer + ", ")
-    })
-    const res = await fetch("/api/openAI", {
-      method: "POST",
-      body: JSON.stringify({
-        message: prompt,
-        user: session.data?.user.id,
-      }),
-    })
-    const user = await res.json()
-    router.push(`/results?id=${user.userId ?? ""}`)
+    setLoading(true)
+    // await fetch("/api/openAI", {
+    //   method: "POST",
+    //   body: JSON.stringify({
+    //     message: prompt,
+    //     userId: session.data?.user.id,
+    //   }),
+    // })
+    router.push(`/results`)
   }
 
-  if (user && user.trials >= user.limit) {
+  // Limit user if a cookie has been set or an unpaid account has reached their account limit
+
+  if (!allowProceed) {
     return (
-      <div className="flex flex-col px-5 justify-center items-center ">
-        <div className="mt-20 text-center">Limit reached, upgrade to premium to unlock more preferences.</div>
-        <UpgradeButton className="mt-5" />
+      <div className="flex flex-col h-full px-5 justify-center items-center ">
+        <div className="-mt-32 text-center">
+          Limit reached, {cookieUserId ? "create an account" : "upgrade to premium"} to unlock more recommendations.
+        </div>
+        {user && <UpgradeButton className="mt-5 max-w-96" />}
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full justify-center items-center">
+        <div className={styles.spinner} /> Finding Recommendations
       </div>
     )
   }
 
   return (
-    <div className="h-full flex justify-center items-center ">
-      <div
-        className="fixed top-10 left-0 rounded-sm bg-blue-500 w-full h-3"
-        style={{ width: `${(100 * (index + 1)) / (questionBank.length + 1)}%` }}
-      />
+    <div className="h-4/5 flex justify-center items-center p-10">
+      <ProgressBar percentage={((index + 1) / (questionBank.length + 1)) * 100} />
       <div>
-        {questionBank[index].question}
-        {questionBank[index].answers.map((answer: string) => {
+        <div className="text-xl">{questionBank[index].question}</div>
+        {questionBank[index].options.map((option: string) => {
           return (
             <div
-              key={answer}
+              key={option}
               onClick={() => {
-                updateselectedAnswers(answer)
-                if (questionBank[index].type == "single" && index < questionBank.length - 1) setIndex(index + 1)
+                updateAnswer(option)
+                if (questionBank[index].type == QuestionTypes.SINGLE && index < questionBank.length - 1) {
+                  const customMap = questionBank[index].customMapping
+                  if (customMap) {
+                    return goForward(customMap[option])
+                  }
+                  goForward()
+                }
               }}
-              className={`border m-2 ${selectedAnswers.has(answer) ? "border-black" : "bg-gray-50"}`}
+              className={`border-black m-2  ${styles.underline}`}
             >
-              {answer}
+              {option}
             </div>
           )
         })}
-        {index > 0 && <button onClick={() => setIndex(index - 1)}>Back</button>}
-        {questionBank[index].type == "open" && (
+        {questionBank[index].type == QuestionTypes.OPEN && (
           <input
-            value={openAnswers.get(index) ?? ""}
+            className="flex w-full border-2 p-2 rounded-xl mb-3 mr-3"
+            placeholder={questionBank[index].placeHolder}
+            value={inputValue}
             onChange={(t) => {
-              updatedOpenAnswer(t.target.value)
+              setInputValue(t.target.value)
+              updateAnswer(t.target.value)
             }}
           />
         )}
-        {index < questionBank.length - 1 && "mc | open".includes(questionBank[index].type) && (
-          <button onClick={() => setIndex(index + 1)}>Next</button>
-        )}
-        {index == questionBank.length - 1 && <button onClick={handleSubmit}>Submit</button>}
+
+        <div className="flex justify-between mt-3">
+          {index > 0 && (
+            <button
+              onClick={() => {
+                goBack()
+              }}
+              className="border border-gray-400 p-3 rounded-md"
+            >
+              <FontAwesomeIcon icon={faChevronLeft} size="lg" />
+            </button>
+          )}
+          {index == questionBank.length - 1 ? (
+            <button onClick={handleSubmit}>Submit</button>
+          ) : (
+            questionBank[index].type != QuestionTypes.SINGLE && (
+              <button
+                className="border border-gray-400 p-3 rounded-md"
+                onClick={() => {
+                  goForward()
+                }}
+              >
+                <FontAwesomeIcon icon={faChevronRight} size="lg" />
+              </button>
+            )
+          )}
+        </div>
       </div>
     </div>
   )

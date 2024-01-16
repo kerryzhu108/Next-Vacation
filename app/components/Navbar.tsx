@@ -20,14 +20,18 @@ const locationMap = new Map(
   })
 )
 
+const InputWrapper = ({ children, classname }: { children: React.ReactNode; classname?: string }) => {
+  return <div className={`mx-3 pt-8 mt-5 border-black ${classname}`}>{children}</div>
+}
+
 export default function Navbar() {
   const [showNav, setShowNav] = useState(false)
   const [showLogout, setShowLogout] = useState(false)
   const loginStore = useLoginStore()
   const session = useSession()
-  const userId = session.data?.user.id
+  const user = session.data?.user
   const router = useRouter()
-  const location = locationMap.get(usePathname()) ?? MenuOptions.HOME
+  const location = locationMap.get(usePathname()) ?? MenuOptions.OTHER
   return (
     <div>
       <div className="hidden sm:block">
@@ -49,22 +53,22 @@ export default function Navbar() {
               className={`mx-3 ${location == MenuOptions.PREFERENCES ? "border-b-2" : ""} border-gray-400`}
               href={`/questions`}
             >
-              Retake Survey
+              Survey
             </Link>
           </div>
           <div className="flex flex-col">
             <button
               onClick={() => {
-                if (userId) {
+                if (user?.id) {
                   return setShowLogout(!showLogout)
                 }
                 loginStore.toggleVisible()
               }}
               className="flex relative items-center"
             >
-              {userId ? (
+              {user?.id ? (
                 <Image
-                  src={`${session.data?.user.image ?? `/avatar${userId.charCodeAt(userId.length - 1) % 10}.svg`}`}
+                  src={`${session.data?.user.image ?? `/avatar${user.id.charCodeAt(user.id.length - 1) % 10}.svg`}`}
                   alt={"avatar"}
                   width={30}
                   height={30}
@@ -118,25 +122,44 @@ export default function Navbar() {
         {showNav && (
           <div className="fixed h-full w-full z-20 top-0" onClick={() => setShowNav(false)}>
             <div className="bg-slate-500 bg-opacity-70 absolute w-full h-full"></div>
-            <div className="bg-white absolute z-10 w-4/5 h-full rounded-r-2xl ">
-              <div className="mx-3 pt-8 mt-5 border-b-2 border-black hover:bg-slate-200">
+            <div className="bg-white absolute z-10 w-4/5 h-full rounded-r-2xl pt-5 ">
+              <InputWrapper classname={`${location == MenuOptions.HOME ? "underline" : ""}`}>
+                <Link href={`/results`}>Home</Link>
+              </InputWrapper>
+              <InputWrapper classname={`${location == MenuOptions.FAVORTIES ? "underline" : ""}`}>
+                <Link href={`/favorites`}>Favorites</Link>
+              </InputWrapper>
+              <InputWrapper classname={`${location == MenuOptions.PREFERENCES ? "underline" : ""}`}>
+                <Link href={`/questions`}>Survey</Link>
+              </InputWrapper>
+              <InputWrapper>
                 <button
                   onClick={() => {
+                    if (user?.id) {
+                      signOut({ redirect: false })
+                      return router.push("/results")
+                    }
                     loginStore.toggleVisible()
                   }}
                 >
-                  Account
+                  {user?.id ? "Sign Out" : "Login"}
                 </button>
-              </div>
-              <div className="mx-3 pt-8 mt-5 border-b-2 border-black hover:bg-slate-200">
-                <Link href={`/results`}>Home</Link>
-              </div>
-              <div className="mx-3 mt-3 pt-8 border-b-2 border-black hover:bg-slate-200">
-                <Link href={`/favorites`}>Favorites</Link>
-              </div>
-              <div className="mx-3 mt-3 pt-8 border-b-2 border-black hover:bg-slate-200">
-                <Link href={`/questions`}>Retake Survey</Link>
-              </div>
+              </InputWrapper>
+              {user && user.status == Status.PAID && (
+                <InputWrapper>
+                  <button
+                    onClick={() => {
+                      if (user?.id) {
+                        signOut({ redirect: false })
+                        return router.push("/results")
+                      }
+                      loginStore.toggleVisible()
+                    }}
+                  >
+                    Cancel Membership
+                  </button>
+                </InputWrapper>
+              )}
               <AdviceLimit classname="w-4/5 left-0 bottom-0 right-0" />
             </div>
           </div>
