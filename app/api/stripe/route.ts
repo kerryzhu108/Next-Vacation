@@ -25,7 +25,8 @@ export const POST = async () => {
           currency: "USD",
           product_data: {
             name: "Travel Where Premium",
-            description: "Simulate a payment by entering FAKE details below.",
+            description:
+              "Simulate a payment by entering any FAKE but VALID info. Eg: Card number: 4242 4242 4242 4242 ",
           },
           unit_amount: 100,
         },

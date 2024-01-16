@@ -13,7 +13,7 @@ export default function Home() {
       <h1 className="text-center animate-fadeIn opacity-0 mt-3" style={{ animationDelay: "2s" }}>
         I can help! Just answer a few questions and I'll give you my recommendations.
       </h1>
-      <Link href="/questions" className="mt-10 opacity-0 animate-fadeIn" style={{ animationDelay: "4s" }}>
+      <Link href="/questions" className="mt-10 opacity-0 animate-fadeIn" style={{ animationDelay: "3.5s" }}>
         <div className={styles.underline}>Get Started</div>
       </Link>
     </div>

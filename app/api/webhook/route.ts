@@ -32,7 +32,6 @@ export async function POST(req: Request) {
         status: "PAID",
       },
     })
-    console.log("updated user")
   }
 
   return new NextResponse(null, { status: 200 })

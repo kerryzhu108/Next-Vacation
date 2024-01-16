@@ -29,7 +29,7 @@ export default async function Results() {
         <div className="h-full flex items-center justify-center -mt-10">
           <Link href="/questions" className="mx-4">
             {!session?.user ? "Please login or " : "No recommendations for this account. Please "}
-            <span className="underline">click this link</span>&nbsp;to take the survey again.
+            <span className="underline">click this link</span>&nbsp;to take the survey.
           </Link>
         </div>
       </>

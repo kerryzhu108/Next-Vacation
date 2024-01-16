@@ -48,10 +48,21 @@ export const POST = async (request: Request) => {
     })
     targetUserId = newUser.id
   } else {
-    // remove old recommendations
-    prisma.recommendation.deleteMany({
+    // update trial count
+    await prisma.user.update({
       where: {
-        userId: targetUserId,
+        id: userId,
+      },
+      data: {
+        trials: {
+          increment: 1,
+        },
+      },
+    })
+    // remove old recommendations
+    await prisma.recommendation.deleteMany({
+      where: {
+        userId: userId,
         favorite: false,
       },
     })

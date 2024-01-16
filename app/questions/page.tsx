@@ -57,14 +57,15 @@ export default function Questions() {
       prompt = prompt.concat(item.promptQuestion + item.answer + ". ")
     })
     setLoading(true)
-    // await fetch("/api/openAI", {
-    //   method: "POST",
-    //   body: JSON.stringify({
-    //     message: prompt,
-    //     userId: session.data?.user.id,
-    //   }),
-    // })
+    await fetch("/api/openAI", {
+      method: "POST",
+      body: JSON.stringify({
+        message: prompt,
+        userId: session.data?.user.id,
+      }),
+    })
     router.push(`/results`)
+    router.refresh()
   }
 
   // Limit user if a cookie has been set or an unpaid account has reached their account limit
@@ -73,7 +74,8 @@ export default function Questions() {
     return (
       <div className="flex flex-col h-full px-5 justify-center items-center ">
         <div className="-mt-32 text-center">
-          Limit reached, {cookieUserId ? "create an account" : "upgrade to premium"} to unlock more recommendations.
+          Limit reached, {!user && cookieUserId ? "create an account" : "upgrade to premium"} to unlock more
+          recommendations.
         </div>
         {user && <UpgradeButton className="mt-5 max-w-96" />}
       </div>
@@ -92,7 +94,7 @@ export default function Questions() {
     <div className="h-4/5 flex justify-center items-center p-10">
       <ProgressBar percentage={((index + 1) / (questionBank.length + 1)) * 100} />
       <div>
-        <div className="text-xl">{questionBank[index].question}</div>
+        <div className="text-xl mb-3">{questionBank[index].question}</div>
         {questionBank[index].options.map((option: string) => {
           return (
             <div

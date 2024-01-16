@@ -6,11 +6,12 @@ import UpgradeButton from "./UpgradeButton"
 export default function AdviceLimit({ classname }: { classname?: string }) {
   const session = useSession()
   const user = session.data?.user
+  console.log(user)
   if (!user || user.status == Status.PAID) {
     return null
   }
   return (
-    <div className={`fixed text-center border rounded-xl bg-gray-800 text-white py-8 px-7 -z-20 ${classname}`}>
+    <div className={`fixed text-center border rounded-xl bg-gray-800 text-white py-8 px-7 z-20 ${classname}`}>
       <div className="text-sm sm:px-10 mb-3">
         Free Recommendations: {user.trials}/{user.limit}
       </div>

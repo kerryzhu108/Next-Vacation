@@ -17,7 +17,6 @@ export default function Result({
 }) {
   const recommendationStore = useRecommendationStore()
   const router = useRouter()
-  if (rec.location.includes("Chicago")) console.log(rec.favorite, "in rec obj")
 
   return (
     <div className={`mt-6 mx-4 relative inline-block text-wrap w-60 ${className}`}>

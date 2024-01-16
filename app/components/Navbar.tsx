@@ -9,7 +9,7 @@ import useLoginStore from "../stores/useLoginStore"
 import { signOut, useSession } from "next-auth/react"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import useUserStore from "../stores/useUserStore"
+import Cookies from "js-cookie"
 import { Status } from "@prisma/client"
 
 const locationMap = new Map(
@@ -32,6 +32,15 @@ export default function Navbar() {
   const user = session.data?.user
   const router = useRouter()
   const location = locationMap.get(usePathname()) ?? MenuOptions.OTHER
+
+  const logout = () => {
+    signOut({ redirect: false }).then(() => {
+      Cookies.set("userId", "")
+      router.push("/results")
+      router.refresh()
+    })
+  }
+
   return (
     <div>
       <div className="hidden sm:block">
@@ -83,8 +92,7 @@ export default function Navbar() {
                   <div
                     className="hover:bg-slate-300"
                     onClick={async () => {
-                      await signOut({ redirect: false })
-                      router.push("/results")
+                      logout()
                     }}
                   >
                     Log out
@@ -96,7 +104,7 @@ export default function Navbar() {
                         await fetch("/api/stripe", {
                           method: "DELETE",
                         })
-                        router.refresh()
+                        session.update()
                       }}
                     >
                       Cancel Premium
@@ -136,8 +144,7 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     if (user?.id) {
-                      signOut({ redirect: false })
-                      return router.push("/results")
+                      logout()
                     }
                     loginStore.toggleVisible()
                   }}
@@ -148,15 +155,15 @@ export default function Navbar() {
               {user && user.status == Status.PAID && (
                 <InputWrapper>
                   <button
-                    onClick={() => {
-                      if (user?.id) {
-                        signOut({ redirect: false })
-                        return router.push("/results")
-                      }
+                    onClick={async () => {
+                      await fetch("/api/stripe", {
+                        method: "DELETE",
+                      })
+                      session.update()
                       loginStore.toggleVisible()
                     }}
                   >
-                    Cancel Membership
+                    Cancel Premium
                   </button>
                 </InputWrapper>
               )}

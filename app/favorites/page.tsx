@@ -21,7 +21,7 @@ export default function Favorites() {
 
   if (!favorites || !favorites.length) {
     return (
-      <div className="h-full flex justify-center items-center mx-3 text-gray-600">
+      <div className="h-full flex justify-center items-center mx-3 text-gray-600 -mt-10">
         You currently have no favorites, press the heart icon on an image to add it here.
       </div>
     )
