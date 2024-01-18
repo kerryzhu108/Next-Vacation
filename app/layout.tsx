@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Open_Sans } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "./providers/AuthProvider"
+import { Analytics } from "@vercel/analytics/react"
 import "@fortawesome/fontawesome-svg-core/styles.css"
 import { config } from "@fortawesome/fontawesome-svg-core"
 import { LoginModal } from "./modals/LoginModal"
@@ -24,6 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <LoginModal />
           <DetailsModal />
           {children}
+          <Analytics />
         </AuthProvider>
       </body>
     </html>
