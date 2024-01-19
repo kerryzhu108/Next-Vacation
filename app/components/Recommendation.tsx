@@ -43,19 +43,20 @@ export default function Result({
         height={200}
         className={`rounded-xl select-none object-cover w-60 h-60 mb-2`}
         draggable={false}
-        onClick={() => {
-          recommendationStore.setRecommendationState({
-            isVisible: true,
-            targetRecommendation: rec,
-          })
-        }}
       />
       {showDesc && (
-        <>
-          {" "}
+        <button
+          className="text-left"
+          onClick={() => {
+            recommendationStore.setRecommendationState({
+              isVisible: true,
+              targetRecommendation: rec,
+            })
+          }}
+        >
           <h2 className="font-semibold">{rec.location}</h2>
           <h3 className="text-sm text-gray-500">Learn More</h3>
-        </>
+        </button>
       )}
     </div>
   )
