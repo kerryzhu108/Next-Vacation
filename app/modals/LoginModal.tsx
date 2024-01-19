@@ -128,7 +128,7 @@ export function LoginModal() {
               Cookie.set(
                 "additionalAuthParams",
                 JSON.stringify({
-                  userId: searchParams.get("id"),
+                  userId: Cookie.get("userId"),
                 })
               )
               await signIn("google")
